@@ -42,12 +42,14 @@
     <tbody>
         {% for pdf_link in pdf_links %}
         <tr>
-            <td>{{ pdf_link.split('/')[-1].replace('.pdf', '') }}</td> <!-- Extracting name from PDF link -->
-            <td><a href="{{ pdf_link }}" target="_blank">Download PDF</a></td>
+            <td>{{ pdf_link.split('/')[-1].replace('.pdf', '') }}</td>
+            <td><a href="{{ url_for('download_file', filename=pdf_link.split('/')[-1]) }}" target="_blank">Download PDF</a></td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<a href="/">Upload Another File</a>
 
 </body>
 </html>
