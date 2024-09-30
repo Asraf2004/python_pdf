@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download PDFs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        table {
+            width: 50%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: blue;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Generated PDFs</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>Download Link</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pdf_link in pdf_links %}
+        <tr>
+            <td>{{ pdf_link.split('/')[-1].replace('.pdf', '') }}</td> <!-- Extracting name from PDF link -->
+            <td><a href="{{ pdf_link }}" target="_blank">Download PDF</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>
