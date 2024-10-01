@@ -6,31 +6,108 @@
     <title>Download PDFs</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        * { margin:0; padding:0; }
+        html, body { width:100vw; height:100vh; } /* Full-screen for canvas */
+        canvas { 
+            overflow: hidden;
+            width:100vw;
+            height:100vh;
+            background-color:black;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1; /* Send canvas to background */
+            pointer-events: none; /* Allow interaction with other elements while still capturing mouse movement */
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: transparent; /* Make background transparent to see the canvas */
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            color: #fff;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
         table {
-            width: 50%;
-            margin: auto;
+            width: 60%;
+            margin: 30px auto;
             border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
         th, td {
-            padding: 10px;
+            padding: 15px;
             text-align: left;
             border: 1px solid #ddd;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #4caf50;
+            color: white;
+            text-align: center;
+        }
+        td {
+            text-align: center;
+            font-size: 16px;
         }
         a {
-            color: blue;
+            color: #3498db;
             text-decoration: none;
+            font-weight: bold;
         }
         a:hover {
             text-decoration: underline;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #fff;
+        }
+        a.download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 5px;
+            margin: 20px auto;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        a.download-btn:hover {
+            background-color: #45a049;
+        }
+        a.return-btn {
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            width: 200px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        a.return-btn:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
 <body>
 
-<h2 style="text-align:center;">Generated PDFs</h2>
+<canvas id="test"></canvas> <!-- Add canvas for background animation -->
+
+<h2>Generated PDFs</h2>
 
 <table>
     <thead>
@@ -43,13 +120,99 @@
         {% for pdf_link in pdf_links %}
         <tr>
             <td>{{ pdf_link.split('/')[-1].replace('.pdf', '') }}</td>
-            <td><a href="{{ url_for('download_file', filename=pdf_link.split('/')[-1]) }}" target="_blank">Download PDF</a></td>
+            <td><a href="{{ url_for('download_file', filename=pdf_link.split('/')[-1]) }}" class="download-btn" target="_blank"><i class="fas fa-download"></i> Download PDF</a></td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
-<a href="/">Upload Another File</a>
+<a href="/" class="return-btn">Upload Another File</a>
+
+<script>
+    var w = window.innerWidth,
+        h = window.innerHeight,
+        canvas = document.getElementById('test'),
+        ctx = canvas.getContext('2d'),
+        rate = 60,
+        arc = 100,
+        time,
+        count,
+        size = 7,
+        speed = 20,
+        parts = new Array,
+        colors = ['red','#f57900','yellow','#ce5c00','#5c3566'];
+    var mouse = { x: 0, y: 0 };
+
+    canvas.setAttribute('width',w);
+    canvas.setAttribute('height',h);
+
+    function create() {
+      time = 0;
+      count = 0;
+      for(var i = 0; i < arc; i++) {
+        parts[i] = {
+          x: Math.ceil(Math.random() * w),
+          y: Math.ceil(Math.random() * h),
+          toX: Math.random() * 5 - 1,
+          toY: Math.random() * 2 - 1,
+          c: colors[Math.floor(Math.random()*colors.length)],
+          size: Math.random() * size
+        }
+      }
+    }
+
+    function particles() {
+      ctx.clearRect(0,0,w,h);
+      window.addEventListener('mousemove', MouseMove, false); // Use window to ensure events are captured
+      for(var i = 0; i < arc; i++) {
+        var li = parts[i];
+        var distanceFactor = DistanceBetween( mouse, parts[i] );
+        var distanceFactor = Math.max( Math.min( 15 - ( distanceFactor / 10 ), 10 ), 1 );
+        ctx.beginPath();
+        ctx.arc(li.x,li.y,li.size*distanceFactor,0,Math.PI*2,false);
+        ctx.fillStyle = li.c;
+        ctx.strokeStyle=li.c;
+        if(i%2==0)
+          ctx.stroke();
+        else
+          ctx.fill();
+        
+        li.x = li.x + li.toX * (time * 0.05);
+        li.y = li.y + li.toY * (time * 0.05);
+        
+        if(li.x > w){
+           li.x = 0; 
+        }
+        if(li.y > h) {
+           li.y = 0; 
+        }
+        if(li.x < 0) {
+           li.x = w; 
+        }
+        if(li.y < 0) {
+           li.y = h; 
+        }
+      }
+      if(time < speed) {
+        time++;
+      }
+      setTimeout(particles,1000/rate);
+    }
+    
+    function MouseMove(e) {
+       mouse.x = e.clientX; // Capture the mouse position relative to the viewport
+       mouse.y = e.clientY;
+    }
+
+    function DistanceBetween(p1,p2) {
+       var dx = p2.x-p1.x;
+       var dy = p2.y-p1.y;
+       return Math.sqrt(dx*dx + dy*dy);
+    }
+    
+    create();
+    particles();
+</script>
 
 </body>
 </html>
