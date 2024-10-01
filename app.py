@@ -172,8 +172,6 @@ def generate_pdfs(df):
         info_text = (
             f"\nThe daughter/son of yours {student_name} is studying B.E CSE in II Year / IV Sem & A/B Section. "
             "\nThe End Semester Grade and the details of courses are given below."
-            "\nஅன்பான பெற்றோர்களுக்கு,"
-            "\nஉங்கள் மகன் மகள் GOKUL S முதலாவது செமஸ்டர் மதிப்பெண்கள் \nமற்றும் CGPA கீழே உள்ள அட்டவணையில் கொடுக்கப்பட்டுள்ளது"
         )
         text_object = c.beginText(40, dear_parents_y - 30)
         text_object.textLines(info_text)
