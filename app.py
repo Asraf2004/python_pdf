@@ -115,9 +115,9 @@ def generate_pdfs(df):
     college_name = "K S RANGASAMY COLLEGE OF TECHNOLOGY, TIRUCHENGODE"
     sub_heading = "(An Autonomous Institution Affiliated to Anna University, Chennai)"
     department_name = "Department of Computer Science and Engineering"
-    footer_sign1 = "HOD Sign"
-    footer_sign2 = "M.Varshana Devi"
-    footer_title2 = "Class Advisor"
+    footer_title2 = "HOD Sign"
+    footer_sign2 = ""
+    footer_sign1 = "Class Advisor"
 
     # Group the data by register number
     grouped = df.groupby('register_number')
@@ -148,8 +148,8 @@ def generate_pdfs(df):
         c.setFont('Helvetica', 12)
         info_text = (
             f"Dear Parents,\n\nThe daughter/son of yours {student_name} "
-            "is studying B.E CSE in II Year / III Sem & A/B Section. "
-            "The End Semester Grade and the details of courses are given below."
+            "is studying B.E CSE in II Year / IV Sem & A/B Section. "
+            "\nThe End Semester Grade and the details of courses are given below."
         )
         text_object = c.beginText(40, height - 220)
         text_object.textLines(info_text)
@@ -159,12 +159,18 @@ def generate_pdfs(df):
         table_data = [['S.No', 'Course Code', 'Course Name', 'Grade']]
         grades = []
         credits = []
-        
+        arrear_count = 0  # To keep track of the number of arrears
+
         for i, (index, row) in enumerate(group.iterrows(), start=1):
             course_name = get_course_name(row['CourseCode'])
             course_credit = get_credit(row['CourseCode'])
             grades.append(row['Grade'])  # Store the grade for SGPA calculation
             credits.append(course_credit)  # Store the credit for SGPA calculation
+
+            # Count arrears where the grade is "U"
+            if row['Grade'] == "U":
+                arrear_count += 1
+
             table_data.append([str(i), row['CourseCode'], course_name, row['Grade']])
 
         # Adjust the column widths, especially for 'Course Name'
@@ -179,28 +185,40 @@ def generate_pdfs(df):
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ]))
 
-        table.wrapOn(c, width, height)
-        table.drawOn(c, 40, height - 450)
+        table_width = sum([50, 100, 200, 100])  # Sum of column widths
 
-        # Calculate SGPA
-        sgpa = calculate_sgpa(grades, credits)
+        # Shift the table 5px to the left by subtracting from the x-coordinate
+        table_x = ((width - table_width) / 2) - 5  # Center the table horizontally and move 5px left
+
+        # Padding for the table (only top padding)
+        table_padding_top = 20  # 20px padding above the table
+
+        # Calculate the new y-coordinate for the table after adding top padding
+        table_y = height - 450 - table_padding_top
+
+        # Wrap the table to fit in the document and draw it with padding
+        table.wrapOn(c, width, height)
+        table.drawOn(c, table_x, table_y)
 
         # Footer Section
+        # Show 'None' if no arrears, otherwise show the count
+        arrear_text = "None" if arrear_count == 0 else str(arrear_count)
+
         footer_text = (
-            "Total Number of Arrears: None\n"
-            f"SGPA: {sgpa:.2f}\n"
+            f"Total Number of Arrears: {arrear_text}\n"
+            f"SGPA: {calculate_sgpa(grades, credits):.2f}\n"
             "Distinction: >= 8.5 & no history of arrears, First Class: >= 7, Second Class: < 7\n"
             "Attendance Percentage of your ward (as on 03.10.2023): 90.37%\n"
             "Contact Number: Class Advisors - A: 9597604228, B: 9345251112"
         )
-        text_object = c.beginText(40, height - 500)
+        text_object = c.beginText(40, table_y - 50)  # Adjust this based on table's position
         text_object.textLines(footer_text)
         c.drawText(text_object)
 
         # Signature Section
         c.setFont('Helvetica', 12)
-        c.drawString(100, 120, f"{footer_sign1}")
-        c.drawString(400, 120, f"{footer_sign2}")
+        c.drawString(100, 100, f"{footer_sign1}")
+        c.drawString(400, 100, f"{footer_sign2}")
         c.drawString(400, 100, f"{footer_title2}")
 
         # Save the PDF
@@ -208,6 +226,8 @@ def generate_pdfs(df):
         pdf_links.append(pdf_file)
 
     return pdf_links
+
+
 
 
 @app.route('/download/<path:filename>', methods=['GET'])
