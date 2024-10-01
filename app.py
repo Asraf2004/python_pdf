@@ -203,7 +203,7 @@ def generate_pdfs(df):
             while len(table_data) < 9:
                 table_data.append(['', '', '', ''])
 
-        # Insert SGPA into the 9th row
+
         # Insert SGPA into the 9th row (position 8 as Python is zero-indexed)
         table_data[8] = ['SGPA', '', '', f"{sgpa:.2f}"]
 
@@ -251,6 +251,16 @@ def generate_pdfs(df):
             "______________\n"
            
         )
+
+        c.setFont('Helvetica', 10)
+        Contact = "Contact Number: Class Advisors - A:9591604228 , 9894999098, B:9345215112 , 9994049209"
+        Contact_position = table_y - 30
+        c.drawCentredString(width / 2, Contact_position - 140, Contact)
+
+
+
+
+
         c.setFont('Helvetica', 10)
         text_object_footer = c.beginText(40, table_y - 100)  # This position should match the footer text
         text_object_footer.textLines(footer_text)
@@ -258,8 +268,8 @@ def generate_pdfs(df):
 
         # Signature Section
         c.setFont('Helvetica', 12)
-        c.drawString(100, 100, f"{footer_sign1}")
-        c.drawString(430, 100, f"{footer_title2}  {footer_sign2}")
+        c.drawString(100, 50, f"{footer_sign1}")
+        c.drawString(430, 50, f"{footer_title2}  {footer_sign2}")
 
         c.save()
         
