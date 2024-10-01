@@ -7,6 +7,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 import mysql.connector
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -101,12 +102,15 @@ def calculate_sgpa(grades, credits):
     total_credits = 0
 
     for grade, credit in zip(grades, credits):
+        if grade == "U":
+            continue  # Skip grades that are "U" (arrears)
         grade_point = get_grade_point(grade)
         total_points += grade_point * credit
         total_credits += credit
 
     # To avoid division by zero
     return total_points / total_credits if total_credits > 0 else 0
+
 
 def generate_pdfs(df):
     """Generate individual PDFs for each student."""
@@ -115,9 +119,12 @@ def generate_pdfs(df):
     college_name = "K S RANGASAMY COLLEGE OF TECHNOLOGY, TIRUCHENGODE"
     sub_heading = "(An Autonomous Institution Affiliated to Anna University, Chennai)"
     department_name = "Department of Computer Science and Engineering"
-    footer_title2 = "HOD Sign"
+    footer_title2 = "HOD"
     footer_sign2 = ""
     footer_sign1 = "Class Advisor"
+
+    # Get current date and format it
+    current_date = datetime.now().strftime("Date : %d/%m/%Y")
 
     # Group the data by register number
     grouped = df.groupby('register_number')
@@ -137,21 +144,38 @@ def generate_pdfs(df):
 
         # Header Section
         c.drawImage(logo_path, x=(width - 150) / 2, y=height - 100, width=150, height=60)
+
+        # Space below the logo
+        space_below_logo = 20  # Adjust this value for more/less space
         c.setFont('Helvetica-Bold', 16)
-        c.drawCentredString(width / 2, height - 120, college_name)
+        c.drawCentredString(width / 2, height - 110 - space_below_logo, college_name)
 
         c.setFont('Helvetica', 12)
-        c.drawCentredString(width / 2, height - 140, sub_heading)
-        c.drawCentredString(width / 2, height - 160, department_name)
+        c.drawCentredString(width / 2, height - 130 - space_below_logo, sub_heading)
+        c.drawCentredString(width / 2, height - 150 - space_below_logo, department_name)
+
+        # Add "End Semester Grade" in bold below the department name
+        c.setFont('Helvetica-Bold', 14)  # Set font to bold for this text
+        c.drawCentredString(width / 2, height - 175 - space_below_logo, "End Semester Grade")
+
+        # Reset to regular font for subsequent text
+        c.setFont('Helvetica', 12)
 
         # Student Info Section
-        c.setFont('Helvetica', 12)
+        dear_parents_x = 40
+        dear_parents_y = height - 220
+        date_x = dear_parents_x + 400
+
+        c.drawString(dear_parents_x, dear_parents_y, "Dear Parents,")
+        c.drawString(date_x, dear_parents_y, current_date)
+
         info_text = (
-            f"Dear Parents,\n\nThe daughter/son of yours {student_name} "
-            "is studying B.E CSE in II Year / IV Sem & A/B Section. "
+            f"\nThe daughter/son of yours {student_name} is studying B.E CSE in II Year / IV Sem & A/B Section. "
             "\nThe End Semester Grade and the details of courses are given below."
+            "\nஅன்பான பெற்றோர்களுக்கு,"
+            "\nஉங்கள் மகன் மகள் GOKUL S முதலாவது செமஸ்டர் மதிப்பெண்கள் \nமற்றும் CGPA கீழே உள்ள அட்டவணையில் கொடுக்கப்பட்டுள்ளது"
         )
-        text_object = c.beginText(40, height - 220)
+        text_object = c.beginText(40, dear_parents_y - 30)
         text_object.textLines(info_text)
         c.drawText(text_object)
 
@@ -159,22 +183,38 @@ def generate_pdfs(df):
         table_data = [['S.No', 'Course Code', 'Course Name', 'Grade']]
         grades = []
         credits = []
-        arrear_count = 0  # To keep track of the number of arrears
+        arrear_count = 0
 
         for i, (index, row) in enumerate(group.iterrows(), start=1):
             course_name = get_course_name(row['CourseCode'])
             course_credit = get_credit(row['CourseCode'])
-            grades.append(row['Grade'])  # Store the grade for SGPA calculation
-            credits.append(course_credit)  # Store the credit for SGPA calculation
+            grades.append(row['Grade'])
+            credits.append(course_credit)
 
-            # Count arrears where the grade is "U"
             if row['Grade'] == "U":
                 arrear_count += 1
 
             table_data.append([str(i), row['CourseCode'], course_name, row['Grade']])
 
-        # Adjust the column widths, especially for 'Course Name'
-        table = Table(table_data, colWidths=[50, 100, 200, 100])  # Increased width for Course Name
+        # Calculate SGPA
+        sgpa = calculate_sgpa(grades, credits)
+
+        # Insert SGPA row as the 9th row, spanning 3 columns
+        if len(table_data) < 9:
+            # Fill in with empty rows until we reach the 9th row
+            while len(table_data) < 9:
+                table_data.append(['', '', '', ''])
+
+        # Insert SGPA into the 9th row
+        # Insert SGPA into the 9th row (position 8 as Python is zero-indexed)
+        table_data[8] = ['SGPA', '', '', f"{sgpa:.2f}"]
+
+        # Add the Distinction/First Class/Second Class row spanning all columns
+        distinction_text = "Distinction: >= 8.5 & no history of arrears, First Class: >= 7, Second Class: < 7"
+        table_data.append([distinction_text, '', '', ''])
+
+        # Adjust the column widths
+        table = Table(table_data, colWidths=[50, 100, 200, 100])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -183,47 +223,50 @@ def generate_pdfs(df):
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.white),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('SPAN', (0, -2), (2, -2)),  # Span for SGPA across 3 columns
+            ('SPAN', (0, -1), (-1, -1)),  # Span the entire row for Distinction line
         ]))
 
-        table_width = sum([50, 100, 200, 100])  # Sum of column widths
-
-        # Shift the table 5px to the left by subtracting from the x-coordinate
-        table_x = ((width - table_width) / 2) - 5  # Center the table horizontally and move 5px left
-
-        # Padding for the table (only top padding)
-        table_padding_top = 20  # 20px padding above the table
-
-        # Calculate the new y-coordinate for the table after adding top padding
+        table_width = sum([50, 100, 200, 100])
+        table_x = ((width - table_width) / 2) - 5
+        table_padding_top = 40
         table_y = height - 450 - table_padding_top
 
-        # Wrap the table to fit in the document and draw it with padding
         table.wrapOn(c, width, height)
         table.drawOn(c, table_x, table_y)
 
-        # Footer Section
-        # Show 'None' if no arrears, otherwise show the count
-        arrear_text = "None" if arrear_count == 0 else str(arrear_count)
+        # Grade classification lines moved here
+        c.setFont('Helvetica', 10)  # Set smaller font size for grade info
+        grade_info_line1 = "91-100 Grade 'O'; 81-90 Grade 'A+'; 71-80 Grade 'A'; 61-70 Grade 'B+'; 51-60 Grade 'B'"
+        grade_info_line2 = "50-59 Grade 'C'; 0-49 Grade 'U'; AB - Absent; WH - Withheld"
 
+        # Calculate the Y position for the grade info lines
+        grade_info_y_position = table_y - 30  # Adjust this value to control the spacing above the footer
+        c.drawCentredString(width / 2, grade_info_y_position, grade_info_line1)  # Adjust Y position as needed
+        c.drawCentredString(width / 2, grade_info_y_position - 20, grade_info_line2)  # Adjust Y position as needed
+
+        # Footer Section
+        arrear_text = "None" if arrear_count == 0 else str(arrear_count)
         footer_text = (
             f"Total Number of Arrears: {arrear_text}\n"
-            f"SGPA: {calculate_sgpa(grades, credits):.2f}\n"
-            "Distinction: >= 8.5 & no history of arrears, First Class: >= 7, Second Class: < 7\n"
-            "Attendance Percentage of your ward (as on 03.10.2023): 90.37%\n"
-            "Contact Number: Class Advisors - A: 9597604228, B: 9345251112"
+            f"Attendance Percentage of your ward as on : {current_date.split(': ')[-1]}"
+            "______________\n"
+           
         )
-        text_object = c.beginText(40, table_y - 50)  # Adjust this based on table's position
-        text_object.textLines(footer_text)
-        c.drawText(text_object)
+        c.setFont('Helvetica', 10)
+        text_object_footer = c.beginText(40, table_y - 100)  # This position should match the footer text
+        text_object_footer.textLines(footer_text)
+        c.drawText(text_object_footer)
 
         # Signature Section
         c.setFont('Helvetica', 12)
         c.drawString(100, 100, f"{footer_sign1}")
-        c.drawString(400, 100, f"{footer_sign2}")
-        c.drawString(400, 100, f"{footer_title2}")
+        c.drawString(430, 100, f"{footer_title2}  {footer_sign2}")
 
-        # Save the PDF
         c.save()
-        pdf_links.append(pdf_file)
+        
+        # Append only the filename, not the full path
+        pdf_links.append(f"{student_name}.pdf")
 
     return pdf_links
 
@@ -236,4 +279,4 @@ def download_file(filename):
     return send_from_directory(app.config['PDF_DIR'], filename, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 
