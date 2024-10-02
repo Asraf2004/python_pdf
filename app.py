@@ -198,14 +198,14 @@ def generate_pdfs(df):
         sgpa = calculate_sgpa(grades, credits)
 
         # Insert SGPA row as the 9th row, spanning 3 columns
-        if len(table_data) < 9:
+        if len(table_data) < 10:
             # Fill in with empty rows until we reach the 9th row
-            while len(table_data) < 9:
+            while len(table_data) < 10:
                 table_data.append(['', '', '', ''])
 
 
         # Insert SGPA into the 9th row (position 8 as Python is zero-indexed)
-        table_data[8] = ['SGPA', '', '', f"{sgpa:.2f}"]
+        table_data[9] = ['SGPA', '', '', f"{sgpa:.2f}"]
 
         # Add the Distinction/First Class/Second Class row spanning all columns
         distinction_text = "Distinction: >= 8.5 & no history of arrears, First Class: >= 7, Second Class: < 7"
