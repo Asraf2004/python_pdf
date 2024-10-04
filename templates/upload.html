@@ -1,288 +1,399 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Excel File</title>
-</head>
-<body>
-    <h2>Upload Student Grades</h2>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".xlsx" required>
-        <button type="submit">Upload</button>
-    </form>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>File Upload Page</title>
-    <style>
-      * { margin:0; padding:0; }
 
-      html, body { width:100vw; height:100vh; overflow: hidden; }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Upload with Sliding Background</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css?family=Exo:400,700');
 
-      canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width:100vw;
-        height:100vh;
-        background-color:black;
-        z-index: 0;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Exo', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #f4f4f4;
+    }
+
+    /* Header Section */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: linear-gradient(135deg, #007acc, #00bfff);
+      border-bottom: 4px solid #003f74;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 3;
+      position: relative;
+    }
+
+    .left-logo img {
+      height: 100px;
+      transition: transform 0.3s ease;
+    }
+
+    .left-logo img:hover {
+      transform: scale(1.05);
+      /* Slight zoom on hover */
+    }
+
+    .center-text {
+      position: relative;
+      left: 50px;
+      text-align: center;
+      color: white;
+    }
+
+    .center-text h1 {
+      font-weight: bold;
+      font-size: 20px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .center-text h3 {
+      font-size: 14px;
+      color: #e0e0e0;
+      margin-bottom: 5px;
+    }
+
+    .center-text h2 {
+      font-size: 18px;
+      color: #f2f2f2;
+    }
+
+    .right-logos {
+      display: flex;
+      align-items: center;
+    }
+
+    .right-logos img {
+      height: 50px;
+      margin-left: 15px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .right-logos img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* File Upload Section */
+    .context {
+      width: 100%;
+      position: absolute;
+      margin-top: 30px;
+      z-index: 2;
+    }
+
+    .context h1 {
+      text-align: center;
+      color: #fff;
+      font-size: 50px;
+    }
+
+    /* Container with Sliding Background Images */
+    .container {
+      margin-top: 30px;
+      height: 303px;
+      text-align: center;
+      padding: 60px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      margin: 100px auto 0;
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+      background-color: rgba(255, 255, 255, 0.8);
+      /* Optional background color for readability */
+      animation: slideBackground 15s infinite;
+      /* 15 seconds total for 3 images, 5 seconds per image */
+      background-size: cover;
+      /* Ensure the background covers the entire container */
+      background-repeat: no-repeat;
+    }
+
+    /* Keyframes for Right-to-Left Sliding Background */
+    /* Keyframes for Right-to-Left Sliding Background */
+    @keyframes slideBackground {
+    0% {
+        background-image: url('{{ url_for('static', filename='images/image1.jpg') }}');
+        background-position: right center;
+    }
+
+    33.33% {
+        background-image: url('{{ url_for('static', filename='images/image2.png') }}');
+        background-position: right center;
+    }
+
+    66.66% {
+        background-image: url('{{ url_for('static', filename='images/image1.jpg') }}');
+        background-position: right center;
+    }
+
+    100% {
+        background-image: url('{{ url_for('static', filename='images/image2.png') }}');
+        background-position: right center;
+    }
+}
+
+
+    input[type="file"] {
+      display: inline-block;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      margin-right: 10px;
+      margin-top: 150px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 50px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Developer Names Section */
+    .developers {
+      position: absolute;
+      width: 100%;
+      bottom: 0;
+      z-index: 3;
+      /* Ensure it's above the animated background */
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      background: linear-gradient(135deg, #007acc, #00bfff);
+      border-bottom: 4px solid #003f74;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      /* Padding for better readability */
+      border-radius: 5px;
+      /* Rounded corners */
+    }
+
+    .developers p {
+      margin: 5px 0;
+    }
+
+    /* Animated background */
+    .area {
+      background: linear-gradient(to left, #8f94fb, #4e54c8);
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .circles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .circles li {
+      position: absolute;
+      display: block;
+      list-style: none;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      animation: animate 25s linear infinite;
+      bottom: -150px;
+    }
+
+    .circles li:nth-child(1) {
+      left: 25%;
+      width: 80px;
+      height: 80px;
+      animation-delay: 0s;
+    }
+
+    .circles li:nth-child(2) {
+      left: 10%;
+      width: 20px;
+      height: 20px;
+      animation-delay: 2s;
+      animation-duration: 12s;
+    }
+
+    .circles li:nth-child(3) {
+      left: 70%;
+      width: 20px;
+      height: 20px;
+      animation-delay: 4s;
+    }
+
+    .circles li:nth-child(4) {
+      left: 40%;
+      width: 60px;
+      height: 60px;
+      animation-delay: 0s;
+      animation-duration: 18s;
+    }
+
+    .circles li:nth-child(5) {
+      left: 65%;
+      width: 20px;
+      height: 20px;
+      animation-delay: 0s;
+    }
+
+    .circles li:nth-child(6) {
+      left: 75%;
+      width: 110px;
+      height: 110px;
+      animation-delay: 3s;
+    }
+
+    .circles li:nth-child(7) {
+      left: 35%;
+      width: 150px;
+      height: 150px;
+      animation-delay: 7s;
+    }
+
+    .circles li:nth-child(8) {
+      left: 50%;
+      width: 25px;
+      height: 25px;
+      animation-delay: 15s;
+      animation-duration: 45s;
+    }
+
+    .circles li:nth-child(9) {
+      left: 20%;
+      width: 15px;
+      height: 15px;
+      animation-delay: 2s;
+      animation-duration: 35s;
+    }
+
+    .circles li:nth-child(10) {
+      left: 85%;
+      width: 150px;
+      height: 150px;
+      animation-delay: 0s;
+      animation-duration: 11s;
+    }
+
+    @keyframes animate {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        border-radius: 0;
       }
 
-      body {
-        font-family: Arial, sans-serif;
-        background: linear-gradient(90deg, #c2e9f3, #ade0de); /* Gradient background */
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        height: 100vh;
-        position: relative; /* Ensure child elements respect the container's relative positioning */
-        z-index: 1;
+      100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+        border-radius: 50%;
       }
+    }
 
-      /* Header Section */
+    /* Responsive Design */
+    @media (max-width: 768px) {
       .header {
-        width: 100%;
-        background: linear-gradient(90deg, rgba(81, 159, 238, 0.8), rgba(131, 191, 252, 0.8)); /* Gradient with opacity */
-        padding: 10px;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        position: relative;
-        z-index: 10;
-        opacity: 0.8;
+        flex-direction: column;
+        align-items: flex-start;
       }
 
-      .header img {
-        max-width: 80px;
-        margin: 0 10px;
-        transition: transform 0.3s ease; /* Animation for hover */
-      }
-
-      .header img:hover {
-        transform: scale(1.1); /* Slight zoom on hover */
-      }
-
-      .header h1 {
-        font-size: 28px;
-        color: white;
-        margin: 0;
-      }
-
-      .header p {
-        font-size: 14px;
-        color: #f0f0f0;
-        margin: 0;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-      }
-
-      /* File Upload Container */
-      .container {
-        text-align: center;
-        background-color: #fff;
-        padding: 60px;
-        border-radius: 10px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        margin-top: 100px;
-        max-width: 600px;
-        width: 100%;
-        position: relative;
-        overflow: hidden;
-        z-index: 2; /* Ensure it appears above the canvas */
-      }
-
-      .logo {
-        width: 180px;
-      }
-
-      #logo1 {
-        max-width: 200px;
-        height: 80px;
-      }
-
-      h1 {
+      .center-text h1 {
         font-size: 24px;
-        margin: 10px 0;
-        color: #333;
       }
 
-      p {
-        font-size: 16px;
-        color: #777;
-      }
-
-      .file-buttons {
-        margin-top: 100px;
-      }
-
-      input[type="file"] {
-        display: inline-block;
-        padding: 10px;
-        border: 2px solid #ddd;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-        margin-right: 10px;
-      }
-
-      button {
-        padding: 10px 20px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
+      .center-text h2 {
         font-size: 16px;
       }
 
-      button:hover {
-        background-color: #45a049;
+      .right-logos img {
+        height: 40px;
       }
+    }
+  </style>
+</head>
 
-      /* New styles for the getresult image */
-      .getresult {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.8;
-        z-index: 0;
-      }
-
-      .overlay {
-        position: relative;
-        z-index: 1;
-      }
-    </style>
-  </head>
-  <body>
-
-    <!-- Particle Background -->
-    <canvas id="test"></canvas>
-
-    <!-- Header Section -->
-    <div class="header">
-        <img id="logo1" src="{{ url_for('static', filename='images/Ksrct-logo.png') }}" alt="KS Rangasamy College of Technology">
-        <img src="{{ url_for('static', filename='images/aicte-logo.png') }}" alt="AICTE">
-        <img src="{{ url_for('static', filename='images/IDEA-LAB.png') }}" alt="IDEA LAB">
-        <img src="{{ url_for('static', filename='images/ANNA_UNIVERSITY.png') }}" alt="ANNA UNIVERSITY">
-        <img src="{{ url_for('static', filename='images/NAAC.png') }}" alt="NAAC">
-        <img src="{{ url_for('static', filename='images/NBA-logo.png') }}" alt="NBA">
-        <img src="{{ url_for('static', filename='images/NIRF.png') }}" alt="NIRF">
+<body>
+  <!-- College Header -->
+  <div class="header">
+    <div class="left-logo">
+      <img id="logo1" src="{{ url_for('static', filename='images/Ksrct-logo.png') }}"
+        alt="KS Rangasamy College of Technology">
     </div>
-      
-
-    <!-- File Upload Container -->
-    <div class="container">
-      <img src="{{ url_for('static', filename='images/getresult1.png') }}" alt="Result Image" class="getresult" />
-      <div class="overlay">
-        <form action="/" method="post" enctype="multipart/form-data">
-          <div class="file-buttons">
-            <input type="file" id="fileInput" name="file" />
-            <button type="submit">Submit File</button>
-          </div>
-        </form>
-      </div>
+    <div class="center-text">
+      <h1>K S RANGASAMY COLLEGE OF TECHNOLOGY, TIRUCHENGODE</h1>
+      <h3>(An Autonomous Institution Affiliated to Anna University, Chennai)</h3>
+      <h2>Department of Computer Science and Engineering</h2>
     </div>
+    <div class="right-logos">
+      <img src="{{ url_for('static', filename='images/aicte-logo.png') }}" alt="AICTE">
+      <img src="{{ url_for('static', filename='images/IDEA-LAB.png') }}" alt="IDEA LAB">
+      <img src="{{ url_for('static', filename='images/ANNA_UNIVERSITY.png') }}" alt="ANNA UNIVERSITY">
+      <img src="{{ url_for('static', filename='images/NAAC.png') }}" alt="NAAC">
+      <img src="{{ url_for('static', filename='images/NBA-logo.png') }}" alt="NBA">
+      <img src="{{ url_for('static', filename='images/NIRF.png') }}" alt="NIRF">
+    </div>
+  </div>
 
-    <script>
-      var w = window.innerWidth,
-          h = window.innerHeight,
-          canvas = document.getElementById('test'),
-          ctx = canvas.getContext('2d'),
-          rate = 60,
-          arc = 100,
-          time,
-          count,
-          size = 7,
-          speed = 20,
-          parts = new Array,
-          colors = ['red','#f57900','yellow','#ce5c00','#5c3566'];
-      var mouse = { x: 0, y: 0 };
+  <!-- Animated Background -->
+  <div class="area">
+    <ul class="circles">
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+    </ul>
+  </div>
 
-      canvas.setAttribute('width',w);
-      canvas.setAttribute('height',h);
+  <!-- File Upload Form -->
+  <div class="context">
+    <h1>Code Your Destiny with ASCI</h1>
+  </div>
+  <div class="container">
+    <form action="/" method="post" enctype="multipart/form-data">
+      <input type="file" id="fileInput" name="file"/>
+      <button type="submit">Submit File</button>
+    </form>
+  </div>
 
-      function create() {
-        time = 0;
-        count = 0;
+  <!-- Developer Names Section -->
+  <div class="developers">
+    <p style="font-weight: bold; color: #fff;">Developed by:</p>
+    <p style="display: flex; justify-content: center; gap: 25px; font-size: 18px; color: #fff;">
+      GOKUL S | ASRAF AHAMED A | PERUMAL S | AJAY S
+    </p>
+  </div>
+</body>
 
-        for(var i = 0; i < arc; i++) {
-          parts[i] = {
-            x: Math.ceil(Math.random() * w),
-            y: Math.ceil(Math.random() * h),
-            toX: Math.random() * 5 - 1,
-            toY: Math.random() * 2 - 1,
-            c: colors[Math.floor(Math.random()*colors.length)],
-            size: Math.random() * size
-          }
-        }
-      }
-
-      function particles() {
-        ctx.clearRect(0,0,w,h);
-        canvas.addEventListener('mousemove', MouseMove, false);
-        for(var i = 0; i < arc; i++) {
-          var li = parts[i];
-          var distanceFactor = DistanceBetween( mouse, parts[i] );
-          var distanceFactor = Math.max( Math.min( 15 - ( distanceFactor / 10 ), 10 ), 1 );
-          ctx.beginPath();
-          ctx.arc(li.x,li.y,li.size*distanceFactor,0,Math.PI*2,false);
-          ctx.fillStyle = li.c;
-          ctx.strokeStyle=li.c;
-          if(i%2==0)
-            ctx.stroke();
-          else
-            ctx.fill();
-
-          li.x = li.x + li.toX * (time * 0.05);
-          li.y = li.y + li.toY * (time * 0.05);
-
-          if(li.x > w){
-             li.x = 0; 
-          }
-          if(li.y > h) {
-             li.y = 0; 
-          }
-          if(li.x < 0) {
-             li.x = w; 
-          }
-          if(li.y < 0) {
-             li.y = h; 
-          }
-        }
-        if(time < speed) {
-          time++;
-        }
-        setTimeout(particles,1000/rate);
-      }
-
-      function MouseMove(e) {
-         mouse.x = e.layerX;
-         mouse.y = e.layerY;
-      }
-
-      function DistanceBetween(p1,p2) {
-         var dx = p2.x-p1.x;
-         var dy = p2.y-p1.y;
-         return Math.sqrt(dx*dx + dy*dy);
-      }
-
-      create();
-      particles();
-    </script>
-
-  </body>
 </html>
