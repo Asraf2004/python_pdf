@@ -103,7 +103,7 @@
     /* Container with Sliding Background Images */
     .container {
       margin-top: 30px;
-      height: 303px;
+      height: 250px;
       text-align: center;
       padding: 60px;
       border-radius: 10px;
@@ -123,28 +123,29 @@
     }
 
     /* Keyframes for Right-to-Left Sliding Background */
-    /* Keyframes for Right-to-Left Sliding Background */
+
     @keyframes slideBackground {
-    0% {
+      0% {
         background-image: url('{{ url_for('static', filename='images/image1.jpg') }}');
         background-position: right center;
-    }
+      }
 
-    33.33% {
+      33.33% {
         background-image: url('{{ url_for('static', filename='images/image2.png') }}');
         background-position: right center;
-    }
+      }
 
-    66.66% {
+      66.66% {
         background-image: url('{{ url_for('static', filename='images/image1.jpg') }}');
         background-position: right center;
-    }
+      }
 
-    100% {
+      100% {
         background-image: url('{{ url_for('static', filename='images/image2.png') }}');
         background-position: right center;
+      }
     }
-}
+
 
 
     input[type="file"] {
@@ -154,7 +155,7 @@
       border-radius: 5px;
       background-color: #f9f9f9;
       margin-right: 10px;
-      margin-top: 150px;
+      margin-top: 50px;
     }
 
     button {
@@ -382,7 +383,7 @@
   </div>
   <div class="container">
     <form action="/" method="post" enctype="multipart/form-data">
-      <input type="file" id="fileInput" name="file"/>
+      <input type="file" id="fileInput" name="file" />
       <button type="submit">Submit File</button>
     </form>
   </div>
